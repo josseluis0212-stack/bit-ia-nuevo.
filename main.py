@@ -38,7 +38,7 @@ class BotTrading:
         self.last_report_date = datetime.utcnow().date()
         # Cargar TODOS los pares USDT Perpetuos dinamicamente
         self.symbol_list = self.bybit.get_all_usdt_symbols()
-        logger.info(f"Bot bit-ia-nuevo v3.2 Professional inicializado con {len(self.symbol_list)} pares")
+        logger.info(f"Bot bit-ia-nuevo v4.0 Professional inicializado con {len(self.symbol_list)} pares")
 
     def run(self):
         # Start Health Check Server for Render Free Tier
