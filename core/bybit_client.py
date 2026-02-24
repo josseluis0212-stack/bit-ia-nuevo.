@@ -64,6 +64,22 @@ class BybitClient:
             self.logger.error(f"Error checking open positions: {e}")
             return 0
 
+    def get_all_usdt_symbols(self):
+        """Obtiene dinámicamente todos los pares USDT Perpetuo activos de Bybit."""
+        try:
+            result = self.session.get_instruments_info(category="linear")
+            symbols = [
+                item['symbol'] for item in result['result']['list']
+                if item['symbol'].endswith('USDT') and item['status'] == 'Trading'
+            ]
+            self.logger.info(f"Total de pares USDT Perpetuo encontrados: {len(symbols)}")
+            return symbols
+        except Exception as e:
+            self.logger.error(f"Error obteniendo lista de pares: {e}")
+            # Fallback a lista base si la API falla
+            return ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "ADAUSDT",
+                    "XRPUSDT", "DOTUSDT", "LINKUSDT", "MATICUSDT", "AVAXUSDT"]
+
     def get_klines(self, symbol, interval, limit=100):
         try:
             # Map common intervals

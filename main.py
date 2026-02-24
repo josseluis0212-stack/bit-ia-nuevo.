@@ -36,7 +36,9 @@ class BotTrading:
         self.stats = StatsManager()
         self.filters = FilterEngine(self.bybit)
         self.last_report_date = datetime.utcnow().date()
-        logger.info("Bot bit-ia-nuevo v3.2 Professional initialized")
+        # Cargar TODOS los pares USDT Perpetuos dinamicamente
+        self.symbol_list = self.bybit.get_all_usdt_symbols()
+        logger.info(f"Bot bit-ia-nuevo v3.2 Professional inicializado con {len(self.symbol_list)} pares")
 
     def run(self):
         # Start Health Check Server for Render Free Tier
@@ -96,7 +98,7 @@ class BotTrading:
             logger.info("Max open trades reached. Skipping scan.")
             return
 
-        for symbol in config.SYMBOL_LIST:
+        for symbol in self.symbol_list:
             logger.info(f"Analyzing {symbol}...")
             
             # Fetch Klines
