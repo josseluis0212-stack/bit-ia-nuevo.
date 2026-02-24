@@ -1,5 +1,9 @@
+```python
 import logging
 import time
+import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
 import config
 from core.bybit_client import BybitClient
@@ -7,6 +11,20 @@ from core.telegram_bot import TelegramBot
 from core.stats_manager import StatsManager
 from strategy.indicators import get_trend, check_entry_signal
 from strategy.filter_engine import FilterEngine
+
+# Simple server to satisfy Render's health check on Free Tier
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is alive")
+    def log_message(self, format, *args):
+        return # Silence logging for health checks
+
+def run_health_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+    server.serve_forever()
 
 # Logging Setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -17,21 +35,61 @@ class BotTrading:
         self.bybit = BybitClient()
         self.telegram = TelegramBot()
         self.stats = StatsManager()
-        self.filters = FilterEngine(self.bybit)
+        self.filters = FilterEngine()
         self.last_report_date = datetime.utcnow().date()
-        logger.info("Bot bit-ia-nuevo v3.0 initialized")
+        logger.info("Bot bit-ia-nuevo v3.2 Professional initialized")
 
     def run(self):
-        self.telegram.send_message("🚀 *Bot bit-ia-nuevo v3.0 OPERATIVO*\nEl sistema está analizando el mercado 24/7.")
+        # Start Health Check Server for Render Free Tier
+        threading.Thread(target=run_health_server, daemon=True).start()
+        
+        self.telegram.send_message("🚀 *Bot bit-ia-nuevo v3.2 PRO-FREE*\nSistema autónomo operando en modo ahorro.")
         
         while True:
             try:
                 self.check_reports()
+                self.track_closures()
                 self.process_market()
                 time.sleep(60) # Scan every minute
             except Exception as e:
                 logger.error(f"Error in main loop: {e}")
                 time.sleep(30)
+
+    def track_closures(self):
+        # We check the last 10 closed PnL records
+        closed_trades = self.bybit.get_closed_pnl()
+        for trade in closed_trades:
+            order_id = trade['orderId']
+            # Only process if we haven't recorded this orderId yet
+            # For simplicity, we use a local cache or check against history
+            if not any(t.get('order_id') == order_id for t in self.stats.history):
+                symbol = trade['symbol']
+                pnl = float(trade['closedPnl'])
+                side = trade['side']
+                entry_price = float(trade['avgEntryPrice'])
+                exit_price = float(trade['avgExitPrice'])
+                
+                result = "GANANCIA" if pnl > 0 else "PERDIDA"
+                
+                # Save to stats
+                self.stats.save_trade(symbol, side, entry_price, exit_price, 0.0, pnl, order_id)
+                
+                # Send Signal
+                self.telegram.send_closure_signal(symbol, side, pnl, result)
+                
+                # Autonomous Learning (Requirement 6/7)
+                if result == "PERDIDA":
+                    self.perform_autonomous_learning(trade)
+
+    def perform_autonomous_learning(self, trade):
+        # Basic autonomous adjustment: 
+        # If we have 3 losses in the last 10 trades, increase filter sensitivity
+        recent_losses = len([t for t in self.stats.history[-10:] if t.get('pnl_usd', 0) < 0])
+        if recent_losses >= 3:
+            logger.info("Autonomous Engine: Adjusting filters due to recent losses.")
+            config.MIN_24H_VOLUME *= 1.1 # Be 10% more selective
+            config.IA_PROBABILITY_THRESHOLD = min(0.85, config.IA_PROBABILITY_THRESHOLD + 0.02)
+            self.telegram.send_message("🧠 *Ajuste Autónomo:* Se han incrementado los umbrales de seguridad tras detectar rachas negativas.")
 
     def process_market(self):
         open_count = self.bybit.get_open_positions_count()
