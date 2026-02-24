@@ -43,9 +43,19 @@ class BotTrading:
     def run(self):
         # Start Health Check Server for Render Free Tier
         threading.Thread(target=run_health_server, daemon=True).start()
-        
-        self.telegram.send_message("🚀 *Bot bit-ia-nuevo v3.2 PRO-FREE*\nSistema autónomo operando en modo ahorro.")
-        
+
+        self.telegram.send_message(
+            f"🚀 *Bot bit-ia-nuevo v4.0 PRO*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🌐 *Pares escaneados:* {len(self.symbol_list)} USDT Perpetuos\n"
+            f"📊 *Estrategia:* EMA 8/21/50 | Multi-TF (4H+1H+5m)\n"
+            f"🛑 *SL:* 1.5% | 🎯 *TP:* 2%\n"
+            f"🧠 *IA Umbral:* {int(config.IA_PROBABILITY_THRESHOLD*100)}%\n"
+            f"💰 *Margen:* $100 USDT | ⚙️ *Apalancamiento:* {config.LEVERAGE}x\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🤖 _Sistema autónomo activo. Reportes D/S/M programados._"
+        )
+
         while True:
             try:
                 self.check_reports()

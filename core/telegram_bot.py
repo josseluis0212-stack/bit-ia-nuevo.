@@ -31,8 +31,8 @@ class TelegramBot:
             f"⚙️ *Apalancamiento:* {config.LEVERAGE}x (Aislado)\n"
             f"💵 *Precio Entrada:* {entry_price}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🎯 *Take Profit:* {tp} (2%)\n"
-            f"🛑 *Stop Loss:* {sl} (1%)\n"
+            f"🎯 *Take Profit:* {tp} (+2%)\n"
+            f"🛑 *Stop Loss:* {sl} (-1.5%)\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"🧠 *Confianza IA:* {int(prob*100)}%\n"
             f"⚠️ *Gestión:* Riesgo controlado activado.\n"
@@ -51,23 +51,47 @@ class TelegramBot:
             f"📊 *Dirección:* {side}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"💰 *PnL Neto:* {pnl_usd:+.2f} USDT\n"
-            f"📅 *Win Rate:* {config.IA_PROBABILITY_THRESHOLD*100}% de éxito objetivo\n"
+            f"📅 *Win Rate objetivo:* {config.IA_PROBABILITY_THRESHOLD*100:.0f}%\n"
             f"━━━━━━━━━━━━━━━━━━━━━━"
         )
         return self.send_message(text)
 
-    def send_report(self, title, stats):
-        # stats is a dict with WinRate, PnL, etc.
+    def send_period_report(self, period_label, stats):
+        """
+        Envía reporte de rendimiento para un periodo (Diario/Semanal/Mensual).
+        stats = {"wins": int, "losses": int, "pnl": float, "best": str, "worst": str}
+        """
+        wins   = stats.get("wins", 0)
+        losses = stats.get("losses", 0)
+        total  = wins + losses
+        pnl    = stats.get("pnl", 0.0)
+        win_rate = (wins / total * 100) if total > 0 else 0.0
+        best   = stats.get("best", "N/A")
+        worst  = stats.get("worst", "N/A")
+
+        # Barra visual de win rate (10 bloques)
+        filled = int(win_rate / 10)
+        bar = "🟩" * filled + "⬜" * (10 - filled)
+        pnl_emoji = "📈" if pnl >= 0 else "📉"
+
         text = (
-            f"📊 *REPORTE DE RENDIMIENTO: {title}*\n"
-            f"━━━━━━━━━━━━━━━━━━\n"
-            f"✅ *Win Rate:* {stats.get('win_rate', 0)}%\n"
-            f"💰 *PnL Total:* ${stats.get('pnl', 0.0):.2f}\n"
-            f"📉 *Max Drawdown:* {stats.get('max_dd', 0.0)}%\n"
-            f"🔢 *Operaciones:* {stats.get('count', 0)}\n"
-            f"━━━━━━━━━━━━━━━━━━"
+            f"📊 *REPORTE {period_label} — BIT-IA PRO*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"✅ *Victorias:* {wins}   ❌ *Derrotas:* {losses}\n"
+            f"📋 *Total Operaciones:* {total}\n"
+            f"🎯 *Win Rate:* {win_rate:.1f}%\n"
+            f"{bar}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"{pnl_emoji} *PnL Neto:* {pnl:+.2f} USDT\n"
+            f"🏆 *Mejor par:* {best}\n"
+            f"⚠️ *Peor par:* {worst}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🤖 _Análisis autónomo en curso. Siguiente revisión programada._"
         )
         return self.send_message(text)
+
+    def send_report(self, title, stats):
+        return self.send_period_report(title, stats)
 
     def send_photo(self, photo_path, caption=""):
         try:

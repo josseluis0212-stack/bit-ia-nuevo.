@@ -1,92 +1,104 @@
 import pandas as pd
 import numpy as np
 import config
-from strategy.indicators import calculate_atr
+from strategy.indicators import calculate_ema, calculate_rsi, calculate_bollinger_bands, calculate_atr
+from datetime import datetime
+
 
 class FilterEngine:
     def __init__(self, bybit_client):
         self.bybit = bybit_client
 
     def validate_filters(self, symbol, klines_5m):
-        # 1. Volume Check (24h)
-        # Using a simplified check from klines for demo
+        """
+        Tres filtros previos antes de calcular probabilidad IA:
+        1. Volumen adecuado
+        2. Volatilidad mínima (no mercado muerto)
+        3. Sin evento macro (top de hora)
+        """
         df = pd.DataFrame(klines_5m, columns=['ts', 'open', 'high', 'low', 'close', 'vol', 'turnover'])
-        last_turnover = float(df['turnover'].iloc[-1]) # Approx 5m volume in USDT
-        # Simplified: Check if currency is in our whitelist or meets a global volume if we had full ticker data
-        # For now, we trust SYMBOL_LIST and check local volume spikes
-        avg_turnover = df['turnover'].astype(float).mean()
-        if last_turnover < (avg_turnover * 0.5): # Avoid dead candles
-            return False, "Low volume"
-
-        # 2. Volatility Check (ATR)
         df['close'] = df['close'].astype(float)
-        df['high'] = df['high'].astype(float)
-        df['low'] = df['low'].astype(float)
+        df['high']  = df['high'].astype(float)
+        df['low']   = df['low'].astype(float)
+        df['vol']   = df['vol'].astype(float)
+        df['turnover'] = df['turnover'].astype(float)
+
+        # --- Filtro 1: Volumen adecuado ---
+        avg_volume = df['turnover'].rolling(20).mean().iloc[-1]
+        last_volume = df['turnover'].iloc[-1]
+        if last_volume < avg_volume * 0.4:
+            return False, "Volumen muy bajo"
+
+        # --- Filtro 2: Volatilidad mínima (ATR) ---
         atr = calculate_atr(df['high'], df['low'], df['close'], 14)
-        last_atr_pct = atr.iloc[-1] / df['close'].iloc[-1]
-        
-        if last_atr_pct < config.MIN_ATR_PCT:
-            return False, "Low volatility"
+        atr_pct = atr.iloc[-1] / df['close'].iloc[-1]
+        if atr_pct < config.MIN_ATR_PCT:
+            return False, "Volatilidad muy baja"
 
-        # 3. Macro Event (Placeholder for simplified manual/scheduled filter)
-        # In a real setup, we'd check an Economic Calendar API
-        # Here we block if it's top of the hour (common news time) inside a +- 2 min window
-        from datetime import datetime
+        # --- Filtro 3: Guardia macro (±2 min del top de hora) ---
         now = datetime.utcnow()
-        if now.minute in [59, 0, 1]:
-            return False, "Macro time window guard"
+        if now.minute in [58, 59, 0, 1, 2]:
+            return False, "Ventana evento macro"
 
-        return True, "Filters passed"
+        return True, "Filtros superados"
 
     def calculate_ia_probability(self, symbol, trend, side, klines_5m):
         """
-        IA v3.2: Hybrid Heuristic-Probabilistic Hybrid Model
-        Threshold: 80% for execution.
+        IA v4.0 - Probabilidad de alcanzar el TP del 2%.
+        Fórmula ponderada basada en 4 pilares:
+        - Alineación de tendencia (40%)
+        - Calidad de la señal EMA (30%)
+        - Volumen institucional (20%)
+        - Estabilidad de volatilidad (10%)
+        Umbral de ejecución: > 80%
         """
         df = pd.DataFrame(klines_5m, columns=['ts', 'open', 'high', 'low', 'close', 'vol', 'turnover'])
         df['close'] = df['close'].astype(float)
-        df['high'] = df['high'].astype(float)
-        df['low'] = df['low'].astype(float)
-        df['vol'] = df['vol'].astype(float)
-        
+        df['high']  = df['high'].astype(float)
+        df['low']   = df['low'].astype(float)
+        df['vol']   = df['vol'].astype(float)
+
         score = 0.0
-        
-        # 1. Trend Alignment (30%)
-        # Check if 5m trend matches macro trend and price is above/below EMA 50
-        from strategy.indicators import calculate_ema
-        ema50 = calculate_ema(df['close'], 50).iloc[-1]
+        close = df['close']
+
+        ema8  = calculate_ema(close, 8)
+        ema21 = calculate_ema(close, 21)
+        ema50 = calculate_ema(close, 50)
+        last_close = close.iloc[-1]
+
+        # ------ PILAR 1: Alineación de tendencia (40%) ------
+        # La tendencia macro (4H+1H) debe coincidir con el lado de entrada
         if trend == side:
-            if (side == "long" and df['close'].iloc[-1] > ema50) or \
-               (side == "short" and df['close'].iloc[-1] < ema50):
-                score += 0.30
+            score += 0.25  # Tendencia confirmada
+            # Bonus: precio sobre EMA 50 en 5m
+            if (side == "long"  and last_close > ema50.iloc[-1]) or \
+               (side == "short" and last_close < ema50.iloc[-1]):
+                score += 0.15
         
-        # 2. Momentum & Volume Spike (30%)
-        # Check recent volume relative to standard deviation
+        # ------ PILAR 2: Calidad de la señal EMA (30%) ------
+        # Separación entre EMA 8 y EMA 21 (señal más fuerte si están separadas)
+        ema_spread = abs(ema8.iloc[-1] - ema21.iloc[-1]) / last_close
+        if ema_spread > 0.003:    # > 0.3% separación → señal fuerte
+            score += 0.30
+        elif ema_spread > 0.001:  # > 0.1% separación → señal moderada
+            score += 0.15
+
+        # ------ PILAR 3: Volumen institucional (20%) ------
         avg_vol = df['vol'].rolling(20).mean().iloc[-1]
         std_vol = df['vol'].rolling(20).std().iloc[-1]
         last_vol = df['vol'].iloc[-1]
-        
-        if last_vol > (avg_vol + std_vol): # Significant spike
-            score += 0.30
+
+        if last_vol > (avg_vol + std_vol):  # Pico significativo
+            score += 0.20
         elif last_vol > avg_vol:
-            score += 0.15
-            
-        # 3. Mean Reversion Risk (Extension) (20%)
-        # Avoid entries if price is too far from EMA 50 (over-extension)
-        dist_to_ema = abs(df['close'].iloc[-1] - ema50) / ema50
-        # If distance is > 1.5% from the mean, we subtract points or give 0
-        if dist_to_ema < 0.015: 
-            score += 0.20
-        elif dist_to_ema < 0.025:
             score += 0.10
-            
-        # 4. Market Integrity (Volatility) (20%)
-        atr = calculate_atr(df['high'], df['low'], df['close'], 14).iloc[-1]
-        atr_pct = atr / df['close'].iloc[-1]
-        
-        if atr_pct > config.MIN_ATR_PCT:
-            score += 0.20
-        else:
-            score += (atr_pct / config.MIN_ATR_PCT) * 0.20
-            
-        return round(score, 2)
+
+        # ------ PILAR 4: Espacio libre hasta TP (10%) ------
+        # Verifica si el precio no está demasiado extendido
+        dist_to_ema50 = abs(last_close - ema50.iloc[-1]) / last_close
+        if dist_to_ema50 < 0.01:    # Cerca de EMA 50 → buena probabilidad de expansión
+            score += 0.10
+        elif dist_to_ema50 < 0.02:
+            score += 0.05
+
+        return round(min(score, 1.0), 2)
