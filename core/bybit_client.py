@@ -6,7 +6,7 @@ import config
 class BybitClient:
     def __init__(self):
         self.session = HTTP(
-            testnet=False,
+            testnet=config.BYBIT_TESTNET,
             api_key=config.BYBIT_API_KEY,
             api_secret=config.BYBIT_API_SECRET,
         )
