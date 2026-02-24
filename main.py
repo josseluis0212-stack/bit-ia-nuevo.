@@ -34,7 +34,7 @@ class BotTrading:
         self.bybit = BybitClient()
         self.telegram = TelegramBot()
         self.stats = StatsManager()
-        self.filters = FilterEngine()
+        self.filters = FilterEngine(self.bybit)
         self.last_report_date = datetime.utcnow().date()
         logger.info("Bot bit-ia-nuevo v3.2 Professional initialized")
 
