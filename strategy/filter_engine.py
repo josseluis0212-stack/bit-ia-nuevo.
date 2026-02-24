@@ -39,32 +39,54 @@ class FilterEngine:
         return True, "Filters passed"
 
     def calculate_ia_probability(self, symbol, trend, side, klines_5m):
-        # Requirement 3: Internal IA probability for 2% TP
-        # Logic: Alignment of RSI, Volume Spike, and Trend strength
+        """
+        IA v3.2: Hybrid Heuristic-Probabilistic Hybrid Model
+        Threshold: 80% for execution.
+        """
         df = pd.DataFrame(klines_5m, columns=['ts', 'open', 'high', 'low', 'close', 'vol', 'turnover'])
         df['close'] = df['close'].astype(float)
-        
-        # Scoring components:
-        # 1. Trend alignment: +40%
-        # 2. RSI context (oversold for long, overbought for short): +30%
-        # 3. Volume spike: +30%
+        df['high'] = df['high'].astype(float)
+        df['low'] = df['low'].astype(float)
+        df['vol'] = df['vol'].astype(float)
         
         score = 0.0
+        
+        # 1. Trend Alignment (30%)
+        # Check if 5m trend matches macro trend and price is above/below EMA 50
+        from strategy.indicators import calculate_ema
+        ema50 = calculate_ema(df['close'], 50).iloc[-1]
         if trend == side:
-            score += 0.4
-            
-        # ROI/Probability estimation based on ATR distance to TP vs SL
-        atr = calculate_atr(df['high'].astype(float), df['low'].astype(float), df['close'], 14).iloc[-1]
-        tp_dist = df['close'].iloc[-1] * config.TAKE_PROFIT_PCT
-        sl_dist = df['close'].iloc[-1] * config.STOP_LOSS_PCT
+            if (side == "long" and df['close'].iloc[-1] > ema50) or \
+               (side == "short" and df['close'].iloc[-1] < ema50):
+                score += 0.30
         
-        # If ATR is healthy (high probability of movement), increase score
-        if atr > (sl_dist * 0.5):
-            score += 0.4
+        # 2. Momentum & Volume Spike (30%)
+        # Check recent volume relative to standard deviation
+        avg_vol = df['vol'].rolling(20).mean().iloc[-1]
+        std_vol = df['vol'].rolling(20).std().iloc[-1]
+        last_vol = df['vol'].iloc[-1]
+        
+        if last_vol > (avg_vol + std_vol): # Significant spike
+            score += 0.30
+        elif last_vol > avg_vol:
+            score += 0.15
+            
+        # 3. Mean Reversion Risk (Extension) (20%)
+        # Avoid entries if price is too far from EMA 50 (over-extension)
+        dist_to_ema = abs(df['close'].iloc[-1] - ema50) / ema50
+        # If distance is > 1.5% from the mean, we subtract points or give 0
+        if dist_to_ema < 0.015: 
+            score += 0.20
+        elif dist_to_ema < 0.025:
+            score += 0.10
+            
+        # 4. Market Integrity (Volatility) (20%)
+        atr = calculate_atr(df['high'], df['low'], df['close'], 14).iloc[-1]
+        atr_pct = atr / df['close'].iloc[-1]
+        
+        if atr_pct > config.MIN_ATR_PCT:
+            score += 0.20
         else:
-            score += 0.2
+            score += (atr_pct / config.MIN_ATR_PCT) * 0.20
             
-        # Final noise
-        score += 0.1 # Base confidence
-        
-        return min(score, 1.0)
+        return round(score, 2)

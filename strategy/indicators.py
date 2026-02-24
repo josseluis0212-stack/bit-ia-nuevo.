@@ -21,12 +21,15 @@ def get_trend(klines_4h, klines_1h):
     df_1h = pd.DataFrame(klines_1h, columns=['ts', 'open', 'high', 'low', 'close', 'vol', 'turnover'])
     df_1h['close'] = df_1h['close'].astype(float)
     
-    # Simple trend detection: Slope of EMA 21 on 4H and 1H
-    ema21_4h = calculate_ema(df_4h['close'], 21)
-    ema21_1h = calculate_ema(df_1h['close'], 21)
+    # Requirement: Price alignment with EMA 50
+    ema50_4h = calculate_ema(df_4h['close'], 50)
+    ema50_1h = calculate_ema(df_1h['close'], 50)
     
-    trend_4h = "up" if ema21_4h.iloc[-1] > ema21_4h.iloc[-2] else "down"
-    trend_1h = "up" if ema21_1h.iloc[-1] > ema21_1h.iloc[-2] else "down"
+    last_price_4h = df_4h['close'].iloc[-1]
+    last_price_1h = df_1h['close'].iloc[-1]
+    
+    trend_4h = "up" if last_price_4h > ema50_4h.iloc[-1] else "down"
+    trend_1h = "up" if last_price_1h > ema50_1h.iloc[-1] else "down"
     
     if trend_4h == "up" and trend_1h == "up":
         return "long"
@@ -39,17 +42,20 @@ def check_entry_signal(klines_5m):
     df['close'] = df['close'].astype(float)
     
     ema8 = calculate_ema(df['close'], 8)
-    ema21 = calculate_ema(df['close'], 21)
+    ema20 = calculate_ema(df['close'], 20)
+    ema50 = calculate_ema(df['close'], 50)
     
-    # Crossover logic
+    # Crossover logic EMA 8 & 20
     last_ema8 = ema8.iloc[-1]
-    last_ema21 = ema21.iloc[-1]
+    last_ema20 = ema20.iloc[-1]
+    last_ema50 = ema50.iloc[-1]
     prev_ema8 = ema8.iloc[-2]
-    prev_ema21 = ema21.iloc[-2]
+    prev_ema20 = ema20.iloc[-2]
     
-    if prev_ema8 <= prev_ema21 and last_ema8 > last_ema21:
+    # Requirement: Cross must be on the correct side of EMA 50
+    if prev_ema8 <= prev_ema20 and last_ema8 > last_ema20 and df['close'].iloc[-1] > last_ema50:
         return "long"
-    elif prev_ema8 >= prev_ema21 and last_ema8 < last_ema21:
+    elif prev_ema8 >= prev_ema20 and last_ema8 < last_ema20 and df['close'].iloc[-1] < last_ema50:
         return "short"
     
     return None

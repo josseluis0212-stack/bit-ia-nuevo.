@@ -17,7 +17,7 @@ class StatsManager:
                 return json.load(f)
         return []
 
-    def save_trade(self, symbol, side, entry_price, exit_price, pnl_pct, pnl_usd):
+    def save_trade(self, symbol, side, entry_price, exit_price, pnl_pct, pnl_usd, order_id=None):
         trade = {
             "timestamp": datetime.utcnow().isoformat(),
             "symbol": symbol,
@@ -25,7 +25,8 @@ class StatsManager:
             "entry_price": entry_price,
             "exit_price": exit_price,
             "pnl_pct": pnl_pct,
-            "pnl_usd": pnl_usd
+            "pnl_usd": pnl_usd,
+            "order_id": order_id
         }
         self.history.append(trade)
         with open(self.data_file, "w") as f:

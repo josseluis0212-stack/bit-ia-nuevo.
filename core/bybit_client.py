@@ -80,3 +80,15 @@ class BybitClient:
         except Exception as e:
             self.logger.error(f"Error fetching klines for {symbol} ({interval}): {e}")
             return []
+
+    def get_closed_pnl(self, symbol=None, limit=10):
+        try:
+            res = self.session.get_closed_pnl(
+                category="linear",
+                symbol=symbol,
+                limit=limit
+            )
+            return res['result']['list']
+        except Exception as e:
+            self.logger.error(f"Error fetching closed PnL: {e}")
+            return []

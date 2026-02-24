@@ -20,17 +20,39 @@ class TelegramBot:
             return None
 
     def send_signal(self, symbol, side, entry_price, sl, tp, prob):
-        emoji = "🚀" if side == "Buy" else "🔻"
+        side_label = "COMPRA (Long) 🟢" if side == "Buy" else "VENTA (Short) 🔴"
         text = (
-            f"{emoji} *NUEVA SEÑAL DETECTADA*\n"
-            f"━━━━━━━━━━━━━━━━━━\n"
-            f"🪙 *Moneda:* {symbol}\n"
-            f"↕️ *Dirección:* {side}\n"
-            f"💰 *Monto:* ${config.MARGIN_PER_TRADE} (5x)\n"
+            f"⚡️ *BIT-IA PRO: SEÑAL DETECTADA*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"💎 *Activo:* {symbol}\n"
+            f"↕️ *Posición:* {side_label}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"💰 *Monto:* ${config.MARGIN_PER_TRADE} USDT\n"
+            f"⚙️ *Apalancamiento:* {config.LEVERAGE}x (Aislado)\n"
             f"💵 *Precio Entrada:* {entry_price}\n"
-            f"🛑 *SL:* {sl} | 🎯 *TP:* {tp}\n"
-            f"🧠 *Probabilidad IA:* {int(prob*100)}%\n"
-            f"━━━━━━━━━━━━━━━━━━"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🎯 *Take Profit:* {tp} (2%)\n"
+            f"🛑 *Stop Loss:* {sl} (1%)\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🧠 *Confianza IA:* {int(prob*100)}%\n"
+            f"⚠️ *Gestión:* Riesgo controlado activado.\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━"
+        )
+        return self.send_message(text)
+
+    def send_closure_signal(self, symbol, side, pnl_usd, result):
+        emoji = "✨" if result == "GANANCIA" else "⚖️"
+        res_color = "❇️ FINALIZADA CON ÉXITO" if result == "GANANCIA" else "⚠️ CIERRE POR RIESGO"
+        text = (
+            f"{emoji} *BIT-IA PRO: OPERACIÓN CERRADA*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🪙 *Moneda:* {symbol}\n"
+            f"📈 *Estado:* {res_color}\n"
+            f"📊 *Dirección:* {side}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"💰 *PnL Neto:* {pnl_usd:+.2f} USDT\n"
+            f"📅 *Win Rate:* {config.IA_PROBABILITY_THRESHOLD*100}% de éxito objetivo\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━"
         )
         return self.send_message(text)
 
