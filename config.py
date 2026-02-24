@@ -17,16 +17,16 @@ LEVERAGE = 5
 MAX_OPEN_TRADES = 10
 
 # Strategy Parameters
-TIMEFRAME_TREND_MAIN = "4h"
+TIMEFRAME_TREND_MAIN = "3h"
 TIMEFRAME_TREND_SUB = "1h"
-TIMEFRAME_ENTRY = "5m"
+TIMEFRAME_ENTRY = "5m" # Default entry
 EMA_FAST = 8
 EMA_MID = 21
 EMA_SLOW = 50
 
 # Risk Management
-STOP_LOSS_PCT = 0.015  # 1.5%
-TAKE_PROFIT_PCT = 0.02  # 2%
+STOP_LOSS_PCT = 0.01  # 1%
+TAKE_PROFIT_PCT = 0.015  # 1.5%
 MAX_DAILY_DRAWDOWN = 0.05  # 5% target to stop bot
 
 # Filter Thresholds

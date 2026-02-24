@@ -45,15 +45,15 @@ class BotTrading:
         threading.Thread(target=run_health_server, daemon=True).start()
 
         self.telegram.send_message(
-            f"🚀 *Bot bit-ia-nuevo v4.0 PRO*\n"
+            f"🚀 *Bot bit-ia-nuevo v4.1 Professional*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"🌐 *Pares escaneados:* {len(self.symbol_list)} USDT Perpetuos\n"
-            f"📊 *Estrategia:* EMA 8/21/50 | Multi-TF (4H+1H+5m)\n"
-            f"🛑 *SL:* 1.5% | 🎯 *TP:* 2%\n"
+            f"📊 *Estrategia:* EMA 8/21 | Tendencia EMA 50 (1H+3H)\n"
+            f"🛑 *SL:* 1% | 🎯 *TP:* 1.5%\n"
             f"🧠 *IA Umbral:* {int(config.IA_PROBABILITY_THRESHOLD*100)}%\n"
             f"💰 *Margen:* $100 USDT | ⚙️ *Apalancamiento:* {config.LEVERAGE}x\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🤖 _Sistema autónomo activo. Reportes D/S/M programados._"
+            f"🤖 _Sistema v4.1 activo 24/7. Modificaciones aplicadas._"
         )
 
         while True:
@@ -112,37 +112,37 @@ class BotTrading:
             logger.info(f"Analyzing {symbol}...")
             
             # Fetch Klines
-            k_4h = self.bybit.get_klines(symbol, "4h")
-            k_1h = self.bybit.get_klines(symbol, "1h")
-            k_5m = self.bybit.get_klines(symbol, "5m")
+            k_main = self.bybit.get_klines(symbol, config.TIMEFRAME_TREND_MAIN)
+            k_sub = self.bybit.get_klines(symbol, config.TIMEFRAME_TREND_SUB)
+            k_entry = self.bybit.get_klines(symbol, config.TIMEFRAME_ENTRY)
             
-            if not k_4h or not k_1h or not k_5m:
+            if not k_main or not k_sub or not k_entry:
                 continue
                 
-            # MTF Trend Analysis (Requirement 2)
-            trend = get_trend(k_4h, k_1h)
+            # MTF Trend Analysis
+            trend = get_trend(k_main, k_sub)
             if trend == "neutral":
                 continue
                 
-            # Entry Signal on 5m (Requirement 2)
-            entry_signal = check_entry_signal(k_5m)
+            # Entry Signal
+            entry_signal = check_entry_signal(k_entry)
             if entry_signal and entry_signal == trend:
                 # Valid Signal Found
                 logger.info(f"Potential signal for {symbol}: {entry_signal}")
                 
-                # Filters (Requirement 3)
-                passed, reason = self.filters.validate_filters(symbol, k_5m)
+                # Filters
+                passed, reason = self.filters.validate_filters(symbol, k_entry)
                 if not passed:
                     logger.info(f"Signal rejected: {reason}")
                     continue
                     
-                # IA Probability (Requirement 3)
-                prob = self.filters.calculate_ia_probability(symbol, trend, entry_signal, k_5m)
+                # IA Probability
+                prob = self.filters.calculate_ia_probability(symbol, trend, entry_signal, k_entry)
                 if prob < config.IA_PROBABILITY_THRESHOLD:
                     logger.info(f"Signal rejected by IA: {prob*100}% probability")
                     continue
                     
-                # Calculate Prices (Requirement 6)
+                # Calculate Prices
                 market_price = self.bybit.get_market_price(symbol)
                 side = "Buy" if entry_signal == "long" else "Sell"
                 
