@@ -159,9 +159,10 @@ class BotTrading:
                 order = self.bybit.open_position(symbol, side, qty, sl, tp)
                 if order:
                     self.telegram.send_signal(symbol, side, market_price, sl, tp, prob)
-                    # For tracking, we record the entry. Closure tracking would require a more complex loop or webhooks.
-                    # Simplified for this build:
                     logger.info(f"Position opened for {symbol}")
+            
+            # Pausa de seguridad para no saturar la API (Rate Limits)
+            time.sleep(0.5)
 
     def check_reports(self):
         now = datetime.utcnow()
