@@ -124,9 +124,18 @@ class BybitClient:
 
     def get_balance(self):
         try:
-            res = self.session.get_wallet_balance(accountType="UNIFIED", coin="USDT")
-            balance = float(res['result']['list'][0]['coin'][0]['walletBalance'])
-            return balance
+            # Primero intentamos Unified
+            try:
+                res = self.session.get_wallet_balance(accountType="UNIFIED", coin="USDT")
+                balance = float(res['result']['list'][0]['coin'][0]['walletBalance'])
+                self.logger.info(f"Conexión UNIFIED exitosa. Balance: {balance}")
+                return balance
+            except Exception:
+                # Si falla Unified, intentamos Classic/Contract
+                res = self.session.get_wallet_balance(accountType="CONTRACT", coin="USDT")
+                balance = float(res['result']['list'][0]['coin'][0]['walletBalance'])
+                self.logger.info(f"Conexión CLASSIC/CONTRACT exitosa. Balance: {balance}")
+                return balance
         except Exception as e:
-            self.logger.error(f"Error fetching balance: {e}")
+            self.logger.error(f"Error fatal fetching balance (Unified/Classic): {e}")
             return None
