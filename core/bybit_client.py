@@ -9,7 +9,7 @@ class BybitClient:
         
         # Diagnóstico de seguridad (solo muestra el inicio para verificar errores de escritura)
         self.logger.info(f"--- VERIFICACIÓN DE ARRANQUE v5.9 ---")
-        self.logger.info(f"Entorno: {'DEMO/BYBIT_TESTNET = os.getenv("BYBIT_TESTNET", "True").lower() == "true"'REAL/MAINNET'}")
+        self.logger.info(f"Entorno: {'DEMO/TESTNET' if config.BYBIT_TESTNET else 'REAL/MAINNET'}")
         self.logger.info(f"API Key (mask): {config.BYBIT_API_KEY[:4]}***")
         self.logger.info(f"API Secret (mask): {config.BYBIT_API_SECRET[:4]}***")
         
