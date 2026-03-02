@@ -15,7 +15,6 @@ SYMBOL_LIST = []  # Se llenará dinámicamente en main.py (escaneo total)
 MARGIN_PER_TRADE = 100.0  # $100 USDT de margen por operación
 LEVERAGE = 5              # Apalancamiento fijo 5x
 MAX_OPEN_TRADES = 10
-BYBIT_TESTNET = os.getenv("BYBIT_TESTNET", "True").lower() == "true"
 
 # Strategy Parameters (Antigravity Alfa v5.0)
 TIMEFRAME_TREND_MAIN = "4h"   # Tendencia macro

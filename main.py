@@ -12,6 +12,7 @@ from strategy.indicators import get_trend, check_entry_signal
 from strategy.filter_engine import FilterEngine
 
 import json
+import pandas as pd
 from strategy.indicators import get_trend, check_entry_signal, calculate_atr
 
 # Global state for Web UI
@@ -150,7 +151,7 @@ class BotTrading:
 
     def process_market(self):
         open_count = self.bybit.get_open_positions_count()
-        if open_count >= config.MAX_OPEN_TRADES:
+        if open_count >= config.MAX_OPEN_TRADES: # Assuming the user intended to keep the comparison and not introduce a syntax error.
             logger.info("Límite de operaciones alcanzado. Esperando cierres...")
             return
 

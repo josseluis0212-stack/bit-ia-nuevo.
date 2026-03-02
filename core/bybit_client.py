@@ -137,12 +137,19 @@ class BybitClient:
                 balance = float(res['result']['list'][0]['coin'][0]['walletBalance'])
                 self.logger.info(f"Conexión UNIFIED exitosa. Balance: {balance}")
                 return balance
-            except Exception:
+            except Exception as e:
+                # Si es 401, lo reportamos claramente
+                if "401" in str(e):
+                    self.logger.error("ERROR 401: La API Key o Secret son INCORRECTOS. Revisa 'l' vs '1'.")
+                
                 # Si falla Unified, intentamos Classic/Contract
                 res = self.session.get_wallet_balance(accountType="CONTRACT", coin="USDT")
                 balance = float(res['result']['list'][0]['coin'][0]['walletBalance'])
                 self.logger.info(f"Conexión CLASSIC/CONTRACT exitosa. Balance: {balance}")
                 return balance
         except Exception as e:
-            self.logger.error(f"Error fatal fetching balance (Unified/Classic): {e}")
+            if "401" in str(e):
+                self.logger.error("ERROR 401 PERSISTENTE: Revisa tus credenciales en Render.")
+            else:
+                self.logger.error(f"Error fatal fetching balance (Unified/Classic): {e}")
             return None
