@@ -5,12 +5,19 @@ import config
 
 class BybitClient:
     def __init__(self):
+        self.logger = logging.getLogger("BybitClient")
+        
+        # Diagnóstico de seguridad (solo muestra el inicio para verificar errores de escritura)
+        self.logger.info(f"--- VERIFICACIÓN DE ARRANQUE v5.9 ---")
+        self.logger.info(f"Entorno: {'DEMO/BYBIT_TESTNET = os.getenv("BYBIT_TESTNET", "True").lower() == "true"'REAL/MAINNET'}")
+        self.logger.info(f"API Key (mask): {config.BYBIT_API_KEY[:4]}***")
+        self.logger.info(f"API Secret (mask): {config.BYBIT_API_SECRET[:4]}***")
+        
         self.session = HTTP(
             testnet=config.BYBIT_TESTNET,
             api_key=config.BYBIT_API_KEY,
             api_secret=config.BYBIT_API_SECRET
         )
-        self.logger = logging.getLogger("BybitClient")
 
     def set_leverage(self, symbol):
         try:
