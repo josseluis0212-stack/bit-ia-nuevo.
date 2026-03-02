@@ -5,14 +5,10 @@ import config
 
 class BybitClient:
     def __init__(self):
-        # Intentamos usar bytick.com que a veces evita bloqueos de IP en Testnet
-        api_url = "https://api-testnet.bytick.com" if config.BYBIT_TESTNET else "https://api.bytick.com"
-        
         self.session = HTTP(
             testnet=config.BYBIT_TESTNET,
             api_key=config.BYBIT_API_KEY,
-            api_secret=config.BYBIT_API_SECRET,
-            domain="bytick" # El dominio 'bytick' suele ser más permisivo con IPs de USA
+            api_secret=config.BYBIT_API_SECRET
         )
         self.logger = logging.getLogger("BybitClient")
 

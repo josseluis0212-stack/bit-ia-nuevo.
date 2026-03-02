@@ -1,0 +1,5 @@
+Probando Llaves Nuevas: WFSXK...
+
+--- Probando en TESTNET ---
+ERROR: FALLO EN TESTNET: Http status code is not 200. (ErrCode: 401) (ErrTime: 04:06:53).
+Request ÔåÆ GET https://api-testnet.bybit.com/v5/account/wallet-balance: accountType=UNIFIED&coin=USDT.

@@ -1,0 +1,9 @@
+Probando Llaves: CERBQ...
+
+--- Probando en MAINNET ---
+ERROR: FALLO EN MAINNET: API key is invalid. (ErrCode: 10003) (ErrTime: 03:56:01).
+Request ÔåÆ GET https://api.bybit.com/v5/account/wallet-balance: accountType=UNIFIED&coin=USDT.
+
+--- Probando en TESTNET ---
+ERROR: FALLO EN TESTNET: Http status code is not 200. (ErrCode: 401) (ErrTime: 03:56:02).
+Request ÔåÆ GET https://api-testnet.bybit.com/v5/account/wallet-balance: accountType=UNIFIED&coin=USDT.
