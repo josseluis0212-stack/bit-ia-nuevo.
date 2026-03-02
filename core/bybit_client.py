@@ -18,16 +18,29 @@ class BybitClient:
 
     def set_leverage(self, symbol):
         try:
-            self.session.set_leverage(
+            # Forzamos modo de margen 'Aislado' y apalancamiento
+            self.session.switch_margin_mode(
                 category="linear",
                 symbol=symbol,
+                tradeMode=1, # 1=Isolated, 0=Cross
                 buyLeverage=str(config.LEVERAGE),
                 sellLeverage=str(config.LEVERAGE),
             )
-            self.logger.info(f"Leverage set to {config.LEVERAGE} for {symbol}")
+            self.logger.info(f"Margen AISLADO y Apalancamiento {config.LEVERAGE}x aplicado a {symbol}")
         except Exception as e:
-            if "leverage not modified" not in str(e).lower():
-                self.logger.error(f"Error setting leverage for {symbol}: {e}")
+            if "not modified" in str(e).lower():
+                self.logger.info(f"Apalancamiento {config.LEVERAGE}x ya configurado para {symbol}")
+            else:
+                try:
+                    self.session.set_leverage(
+                        category="linear",
+                        symbol=symbol,
+                        buyLeverage=str(config.LEVERAGE),
+                        sellLeverage=str(config.LEVERAGE),
+                    )
+                    self.logger.info(f"Apalancamiento {config.LEVERAGE}x establecido para {symbol}")
+                except Exception as e2:
+                    self.logger.warning(f"No se pudo forzar el apalancamiento: {e2}")
 
     def get_market_price(self, symbol):
         try:

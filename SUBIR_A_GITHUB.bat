@@ -1,19 +1,25 @@
 @echo off
-echo PREPARANDO SUBIDA A GITHUB - Antigravity Alfa v5.0
-echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo 1. Inicializando repositorio local...
-git init
-echo 2. Añadiendo archivos...
-git add .
-echo 3. Creando commit Alfa v5.0...
-git commit -m "Antigravity Alfa v5.0 - Estrategia Avanzada"
+setlocal enabledelayedexpansion
+
+echo ========================================================
+echo   PREPARANDO SUBIDA A GITHUB - Antigravity Alfa v5.1
+echo ========================================================
 echo.
-echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo SIGUIENTE PASO:
-echo 1. Asegúrate de tener tu repositorio en GitHub.
-echo 2. Ejecuta estos comandos para sincronizar con la nube (Render):
-echo    git branch -M main
-echo    git push -u origin main
-echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo Una vez subido, Render se activará automáticamente.
+
+echo 1. Limpiando y preparando archivos...
+git add .
+
+echo 2. Creando punto de guardado (v5.1 Premium)...
+git commit -m "🚀 Antigravity Alfa v5.1 - Sincronizacion Automatica Cloud"
+
+echo 3. Enviando a la Nube (GitHub -> Render)...
+git branch -M main
+git push -u origin main --force
+
+echo.
+echo ========================================================
+echo   ¡TODO LISTO! Tus cambios ya estan en la Nube. ☁️
+echo   Render se activara automaticamente en unos minutos.
+echo ========================================================
+echo.
 pause

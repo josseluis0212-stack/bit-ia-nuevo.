@@ -196,8 +196,9 @@ class BotTrading:
                     sl = round(market_price + (atr * config.ATR_SL_MULTIPLIER), 4)
                     tp = round(market_price - (atr * config.ATR_TP_MULTIPLIER), 4)
                 
-                # Cálculo de Tamaño de Posición ($100 per trade at 5x)
-                qty = round(config.MARGIN_PER_TRADE * config.LEVERAGE / market_price, 3)
+                # Cálculo de Tamaño de Posición ($100 de margen real con 5x)
+                # Position Value = Qty * Price = Margin * Leverage
+                qty = round((config.MARGIN_PER_TRADE * config.LEVERAGE) / market_price, 3)
                 
                 # Ejecución Autónoma
                 order = self.bybit.open_position(symbol, side, qty, sl, tp)
