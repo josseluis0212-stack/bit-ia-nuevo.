@@ -1,104 +1,92 @@
 import pandas as pd
 import numpy as np
 import config
-from strategy.indicators import calculate_ema, calculate_rsi, calculate_bollinger_bands, calculate_atr
+from strategy.indicators import calculate_ema, calculate_rsi, calculate_bollinger_bands, calculate_atr, calculate_macd
 from datetime import datetime
-
 
 class FilterEngine:
     def __init__(self, bybit_client):
         self.bybit = bybit_client
 
-    def validate_filters(self, symbol, klines_5m):
+    def validate_filters(self, symbol, klines_entry):
         """
-        Tres filtros previos antes de calcular probabilidad IA:
-        1. Volumen adecuado
-        2. Volatilidad mínima (no mercado muerto)
-        3. Sin evento macro (top de hora)
+        Filtros de seguridad profesional v5.0:
+        1. Liquidez (Volumen Relativo)
+        2. Volatilidad (BB Width)
+        3. Evitar Eventos Macro (Top de hora)
         """
-        df = pd.DataFrame(klines_5m, columns=['ts', 'open', 'high', 'low', 'close', 'vol', 'turnover'])
+        df = pd.DataFrame(klines_entry, columns=['ts', 'open', 'high', 'low', 'close', 'vol', 'turnover'])
         df['close'] = df['close'].astype(float)
-        df['high']  = df['high'].astype(float)
-        df['low']   = df['low'].astype(float)
-        df['vol']   = df['vol'].astype(float)
+        df['vol'] = df['vol'].astype(float)
         df['turnover'] = df['turnover'].astype(float)
 
-        # --- Filtro 1: Volumen adecuado ---
-        avg_volume = df['turnover'].rolling(20).mean().iloc[-1]
-        last_volume = df['turnover'].iloc[-1]
-        if last_volume < avg_volume * 0.4:
-            return False, "Volumen muy bajo"
+        # --- Filtro 1: Liquidez (Volumen 24h y Relativo) ---
+        # El volumen debe ser al menos 1.5x el promedio de las últimas 20 velas
+        avg_vol = df['vol'].rolling(20).mean().iloc[-1]
+        last_vol = df['vol'].iloc[-1]
+        if last_vol < avg_vol * 1.2:
+            return False, "Baja presión de volumen relativo"
 
-        # --- Filtro 2: Volatilidad mínima (ATR) ---
-        atr = calculate_atr(df['high'], df['low'], df['close'], 14)
-        atr_pct = atr.iloc[-1] / df['close'].iloc[-1]
-        if atr_pct < config.MIN_ATR_PCT:
-            return False, "Volatilidad muy baja"
+        # --- Filtro 2: Volatilidad (Bollinger Band Width) ---
+        upper, sma, lower = calculate_bollinger_bands(df['close'], 20)
+        bb_width = (upper.iloc[-1] - lower.iloc[-1]) / sma.iloc[-1]
+        if bb_width < 0.005:  # Menos del 0.5% de ancho = Mercado lateral/muerto
+            return False, "Mercado en compresión lateral (muerto)"
 
-        # --- Filtro 3: Guardia macro (±2 min del top de hora) ---
+        # --- Filtro 3: Ventana Macro ---
         now = datetime.utcnow()
-        if now.minute in [58, 59, 0, 1, 2]:
-            return False, "Ventana evento macro"
+        if now.minute in [59, 0, 1]:  # Reducido a ±1 min para ser más eficiente
+            return False, "Protección volatilidad de cambio de hora"
 
-        return True, "Filtros superados"
+        return True, "Filtros Alfa superados"
 
-    def calculate_ia_probability(self, symbol, trend, side, klines_5m):
+    def calculate_ia_probability(self, symbol, trend, side, klines_entry):
         """
-        IA v4.0 - Probabilidad de alcanzar el TP del 2%.
-        Fórmula ponderada basada en 4 pilares:
-        - Alineación de tendencia (40%)
-        - Calidad de la señal EMA (30%)
-        - Volumen institucional (20%)
-        - Estabilidad de volatilidad (10%)
-        Umbral de ejecución: > 80%
+        Motor Probabilístico Antigravity Alfa (0-100%).
+        Confluencia de 4 Pilares:
+        - Soporte de Tendencia (EMA 200 + Macro) (30%)
+        - Fuerza del Momento (MACD + RSI) (30%)
+        - Confirmación de Volatilidad (BB Position) (20%)
+        - Calidad del Volumen (VSA Básico) (20%)
         """
-        df = pd.DataFrame(klines_5m, columns=['ts', 'open', 'high', 'low', 'close', 'vol', 'turnover'])
+        df = pd.DataFrame(klines_entry, columns=['ts', 'open', 'high', 'low', 'close', 'vol', 'turnover'])
         df['close'] = df['close'].astype(float)
-        df['high']  = df['high'].astype(float)
-        df['low']   = df['low'].astype(float)
-        df['vol']   = df['vol'].astype(float)
-
-        score = 0.0
-        close = df['close']
-
-        ema8  = calculate_ema(close, 8)
-        ema21 = calculate_ema(close, 21)
-        ema50 = calculate_ema(close, 50)
-        last_close = close.iloc[-1]
-
-        # ------ PILAR 1: Alineación de tendencia (40%) ------
-        # La tendencia macro (4H+1H) debe coincidir con el lado de entrada
-        if trend == side:
-            score += 0.25  # Tendencia confirmada
-            # Bonus: precio sobre EMA 50 en 5m
-            if (side == "long"  and last_close > ema50.iloc[-1]) or \
-               (side == "short" and last_close < ema50.iloc[-1]):
-                score += 0.15
+        df['vol'] = df['vol'].astype(float)
         
-        # ------ PILAR 2: Calidad de la señal EMA (30%) ------
-        # Separación entre EMA 8 y EMA 21 (señal más fuerte si están separadas)
-        ema_spread = abs(ema8.iloc[-1] - ema21.iloc[-1]) / last_close
-        if ema_spread > 0.003:    # > 0.3% separación → señal fuerte
-            score += 0.30
-        elif ema_spread > 0.001:  # > 0.1% separación → señal moderada
+        score = 0.0
+        last_close = df['close'].iloc[-1]
+        
+        # 1. Pilar Tendencia (30%)
+        ema200 = calculate_ema(df['close'], config.EMA_LONG_TERM).iloc[-1]
+        if trend == side:
+            score += 0.20
+            # Bonus si estamos a favor de la tendencia institucional
+            if (side == "long" and last_close > ema200) or (side == "short" and last_close < ema200):
+                score += 0.10
+
+        # 2. Pilar Momento (30%)
+        macd, signal, hist = calculate_macd(df['close'])
+        rsi = calculate_rsi(df['close']).iloc[-1]
+        
+        # MACD Histograma en aumento/disminución a favor
+        if (side == "long" and hist.iloc[-1] > hist.iloc[-2]) or \
+           (side == "short" and hist.iloc[-1] < hist.iloc[-2]):
+            score += 0.15
+            
+        # RSI en zona óptima (no extremo)
+        if (side == "long" and 40 < rsi < 65) or (side == "short" and 35 < rsi < 60):
             score += 0.15
 
-        # ------ PILAR 3: Volumen institucional (20%) ------
-        avg_vol = df['vol'].rolling(20).mean().iloc[-1]
-        std_vol = df['vol'].rolling(20).std().iloc[-1]
-        last_vol = df['vol'].iloc[-1]
-
-        if last_vol > (avg_vol + std_vol):  # Pico significativo
+        # 3. Pilar Volatilidad (20%)
+        upper, sma, lower = calculate_bollinger_bands(df['close'])
+        # Estamos cerca de la media pero con dirección?
+        dist_to_sma = abs(last_close - sma.iloc[-1]) / last_close
+        if dist_to_sma < 0.01: # Cercanía saludable para continuar movimiento
             score += 0.20
-        elif last_vol > avg_vol:
-            score += 0.10
 
-        # ------ PILAR 4: Espacio libre hasta TP (10%) ------
-        # Verifica si el precio no está demasiado extendido
-        dist_to_ema50 = abs(last_close - ema50.iloc[-1]) / last_close
-        if dist_to_ema50 < 0.01:    # Cerca de EMA 50 → buena probabilidad de expansión
-            score += 0.10
-        elif dist_to_ema50 < 0.02:
-            score += 0.05
+        # 4. Pilar Volumen (20%)
+        avg_vol = df['vol'].rolling(20).mean().iloc[-1]
+        if df['vol'].iloc[-1] > avg_vol:
+            score += 0.20
 
-        return round(min(score, 1.0), 2)
+        return round(score, 2)

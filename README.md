@@ -1,58 +1,33 @@
-# bit-ia-nuevo v3.0 - Professional Futures Bot
+# Antigravity Alfa v5.0 - Professional Futures Bot
 
-Este bot ha sido reconstruido desde cero siguiendo los 7 requisitos profesionales para operar en Bybit Futuros.
+Este bot ha sido transformado en un motor de trading autónomo de alta fidelidad, utilizando confluencia técnica institucional y gestión de riesgo dinámica.
 
-## Parámetros de Configuración Final
+## Parámetros de Operación Alfa v5.0
 
 | Parámetro | Valor | Descripción |
 |-----------|-------|-------------|
-| **Modo** | AUTÓNOMO v3.1 | Aprendizaje y ajuste dinámico |
-| **Apalancamiento** | 5x | Fijo para todas las posiciones |
-| **Monto por Operación** | $50.00 USDT | Margen inicial fijo |
-| **Stop Loss** | 1% (Exacto) | Fijo e inamovible |
-| **Take Profit** | 2% (Exacto) | Fijo e inamovible |
-| **Indicadores** | EMA 8 / 20 / 50 | Filtro tendencial y gatillo |
-| **Rastreo Cierres** | En tiempo real | Reporte de PnL USDT inmediato |
-| **Aprendizaje IA** | Dinámico | Ajusta filtros según racha de pérdidas |
+| **Modo** | ANTIGRAVITY v5.0 | Totalmente autónomo e independiente |
+| **Apalancamiento** | 5x (Fijo) | Configuración de riesgo balanceada |
+| **Monto por Operación** | $100.00 USDT | Margen por posición (Demo) |
+| **Stop Loss** | Dinámico (ATR) | Basado en volatilidad real |
+| **Take Profit** | Dinámico (ATR) | Ratio optimizado > 1.5 |
+| **Indicadores** | MACD / RSI / BB / EMA 200 | Motor de confluencia triple |
+| **Rastreo Cierres** | Tiempo Real | Notificaciones inmediatas en español |
+| **Escaneo de Pares** | TOTAL | Escanea todos los perpetuos USDT |
 
 ## Estructura del Proyecto
 
 - `core/`: Clientes de API, Telegram, Estadísticas y Riesgo.
-- `strategy/`: Motores de análisis, indicadores y filtros.
+- `strategy/`: Motores de análisis Antigravity Alfa.
 - `data/`: Historial de operaciones (JSON).
 - `reports/`: Gráficos de desempeño (PNG).
 
-## Despliegue en Render
+## Despliegue 🚀
 
-## Guía de Despliegue 🚀
-
-Sigue estos pasos para poner tu bot en vivo:
-
-### Paso 1: Subir a GitHub
-1. Crea un repositorio en GitHub llamado `bit-ia-nuevo`.
-2. En tu terminal local (en la carpeta del bot), ejecuta:
-   ```bash
-   git remote add origin <URL_DE_TU_REPO_GIT>
-   git branch -M main
-   git push -u origin main
-   ```
-
-### Paso 2: Configurar en Render
-1. Ve a [Render Dashboard](https://dashboard.render.com/).
-2. Crea un nuevo **Worker** (o Web Service) y conecta tu repo.
-3. Configuración:
-   - **Environment**: `Python`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `python main.py`
-
-### Paso 3: Variables de Entorno (IMPORTANTE)
-En la pestaña **Environment** de Render, añade los valores de tu archivo `.env`:
-- `BYBIT_API_KEY`
-- `BYBIT_API_SECRET`
-- `TELEGRAM_TOKEN`
-- `TELEGRAM_CHAT_ID`
+1. Configura tu `.env` con las claves de Bybit Testnet.
+2. Asegura que `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` están presentes.
+3. Ejecución local: `python main.py`.
+4. El bot operará 24/7 de forma autónoma, buscando solo señales de alta probabilidad (>85%).
 
 ---
-*Bot bit-ia-nuevo v3.2 Professional - Operando con Disciplina e Inteligencia.*
-
-🚀 **El bot está diseñado para operar 24/7 de forma autónoma.**
+*Antigravity Alfa v5.0 - Inteligencia aplicada al mercado de futuros.*

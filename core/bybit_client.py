@@ -83,7 +83,7 @@ class BybitClient:
     def get_klines(self, symbol, interval, limit=100):
         try:
             # Map common intervals
-            interval_map = {"5m": "5", "1h": "60", "4h": "240"}
+            interval_map = {"5m": "5", "15m": "15", "1h": "60", "3h": "180", "4h": "240"}
             bybit_interval = interval_map.get(interval, interval)
             
             klines = self.session.get_kline(

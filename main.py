@@ -11,23 +11,62 @@ from core.stats_manager import StatsManager
 from strategy.indicators import get_trend, check_entry_signal
 from strategy.filter_engine import FilterEngine
 
-# Simple server to satisfy Render's health check on Free Tier
-class HealthCheckHandler(BaseHTTPRequestHandler):
+import json
+from strategy.indicators import get_trend, check_entry_signal, calculate_atr
+
+# Global state for Web UI
+GLOBAL_STATE = {
+    "balance": 50000.0,
+    "session_pnl": 0.0,
+    "trend": "neutral",
+    "open_trades": [],
+    "logs": []
+}
+
+class WebHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Bot is alive")
+        if self.path == '/':
+            self.serve_file('web/index.html', 'text/html')
+        elif self.path == '/styles.css':
+            self.serve_file('web/styles.css', 'text/css')
+        elif self.path == '/api/stats':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(GLOBAL_STATE).encode())
+        else:
+            self.send_error(404)
+
+    def serve_file(self, path, content_type):
+        try:
+            with open(path, 'rb') as f:
+                self.send_response(200)
+                self.send_header('Content-type', content_type)
+                self.end_headers()
+                self.wfile.write(f.read())
+        except FileNotFoundError:
+            self.send_error(404)
+
     def log_message(self, format, *args):
         return # Silence logging for health checks
 
-def run_health_server():
+def run_web_server():
     port = int(os.environ.get("PORT", 8080))
-    server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+    server = HTTPServer(('0.0.0.0', port), WebHandler)
     server.serve_forever()
 
+# Logging Custom Handler for Web UI
+class WebLogHandler(logging.Handler):
+    def emit(self, record):
+        log_entry = self.format(record)
+        GLOBAL_STATE["logs"].insert(0, log_entry)
+        if len(GLOBAL_STATE["logs"]) > 50:
+            GLOBAL_STATE["logs"].pop()
+
 # Logging Setup
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger("MainLoop")
+logger.addHandler(WebLogHandler())
 
 class BotTrading:
     def __init__(self):
@@ -38,22 +77,23 @@ class BotTrading:
         self.last_report_date = datetime.utcnow().date()
         # Cargar TODOS los pares USDT Perpetuos dinamicamente
         self.symbol_list = self.bybit.get_all_usdt_symbols()
-        logger.info(f"Bot bit-ia-nuevo v4.0 Professional inicializado con {len(self.symbol_list)} pares")
+        logger.info(f"Antigravity Alfa v5.0 inicializado con {len(self.symbol_list)} pares")
 
     def run(self):
-        # Start Health Check Server for Render Free Tier
-        threading.Thread(target=run_health_server, daemon=True).start()
+        # Start Web Server for UI
+        threading.Thread(target=run_web_server, daemon=True).start()
 
         self.telegram.send_message(
-            f"🚀 *Bot bit-ia-nuevo v4.1 Professional*\n"
+            f"🚀 *Antigravity Alfa v5.0 Activa*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🌐 *Pares escaneados:* {len(self.symbol_list)} USDT Perpetuos\n"
-            f"📊 *Estrategia:* EMA 8/21 | Tendencia EMA 50 (1H+3H)\n"
-            f"🛑 *SL:* 1% | 🎯 *TP:* 1.5%\n"
-            f"🧠 *IA Umbral:* {int(config.IA_PROBABILITY_THRESHOLD*100)}%\n"
-            f"💰 *Margen:* $100 USDT | ⚙️ *Apalancamiento:* {config.LEVERAGE}x\n"
+            f"🌐 *Escaneo:* TODOS los pares USDT Perpetuos\n"
+            f"📊 *Estrategia:* Confluencia MACD + RSI + BB\n"
+            f"🛡️ *Riesgo:* SL/TP Dinámico (ATR)\n"
+            f"🧠 *IA Umbral:* {int(config.IA_PROBABILITY_THRESHOLD*100)}% (Alfa)\n"
+            f"💰 *Margen:* ${config.MARGIN_PER_TRADE} USDT | ⚙️ *Apalancamiento:* {config.LEVERAGE}x\n"
+            f"💼 *Máx Ops:* {config.MAX_OPEN_TRADES}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🤖 _Sistema v4.1 activo 24/7. Modificaciones aplicadas._"
+            f"🤖 _Sistema autónomo v5.0 operando 24/7 en MODO DEMO._"
         )
 
         while True:
@@ -105,64 +145,89 @@ class BotTrading:
     def process_market(self):
         open_count = self.bybit.get_open_positions_count()
         if open_count >= config.MAX_OPEN_TRADES:
-            logger.info("Max open trades reached. Skipping scan.")
+            logger.info("Límite de operaciones alcanzado. Esperando cierres...")
             return
 
         for symbol in self.symbol_list:
-            logger.info(f"Analyzing {symbol}...")
+            logger.info(f"Analizando {symbol} (Alfa v5.0)...")
             
-            # Fetch Klines
+            # Fetch Klines con temporalidades Alfa
             k_main = self.bybit.get_klines(symbol, config.TIMEFRAME_TREND_MAIN)
-            k_sub = self.bybit.get_klines(symbol, config.TIMEFRAME_TREND_SUB)
             k_entry = self.bybit.get_klines(symbol, config.TIMEFRAME_ENTRY)
             
-            if not k_main or not k_sub or not k_entry:
+            if not k_main or not k_entry:
                 continue
                 
-            # MTF Trend Analysis
-            trend = get_trend(k_main, k_sub)
+            # Análisis de Tendencia Institucional (4H)
+            trend = get_trend(k_main, k_main) # Usamos main para tendencia
             if trend == "neutral":
                 continue
                 
-            # Entry Signal
+            # Señal de Gatillo (15m)
             entry_signal = check_entry_signal(k_entry)
             if entry_signal and entry_signal == trend:
-                # Valid Signal Found
-                logger.info(f"Potential signal for {symbol}: {entry_signal}")
-                
-                # Filters
+                # Validar Filtros de Liquidez y Volatilidad
                 passed, reason = self.filters.validate_filters(symbol, k_entry)
                 if not passed:
-                    logger.info(f"Signal rejected: {reason}")
+                    logger.info(f"Señal rechazada: {reason}")
                     continue
                     
-                # IA Probability
+                # Calcular Probabilidad con Motor Alfa
                 prob = self.filters.calculate_ia_probability(symbol, trend, entry_signal, k_entry)
                 if prob < config.IA_PROBABILITY_THRESHOLD:
-                    logger.info(f"Signal rejected by IA: {prob*100}% probability")
+                    logger.info(f"Rechazado por Motor Alfa: {prob*100}% de confianza")
                     continue
                     
-                # Calculate Prices
+                # Gestión de Riesgo Dinámica (ATR)
+                from strategy.indicators import calculate_atr
+                df_entry = pd.DataFrame(k_entry, columns=['ts', 'open', 'high', 'low', 'close', 'vol', 'turnover'])
+                df_entry['close'] = df_entry['close'].astype(float)
+                df_entry['high'] = df_entry['high'].astype(float)
+                df_entry['low'] = df_entry['low'].astype(float)
+                
+                atr = calculate_atr(df_entry['high'], df_entry['low'], df_entry['close']).iloc[-1]
                 market_price = self.bybit.get_market_price(symbol)
                 side = "Buy" if entry_signal == "long" else "Sell"
                 
                 if side == "Buy":
-                    sl = round(market_price * (1 - config.STOP_LOSS_PCT), 4)
-                    tp = round(market_price * (1 + config.TAKE_PROFIT_PCT), 4)
+                    sl = round(market_price - (atr * config.ATR_SL_MULTIPLIER), 4)
+                    tp = round(market_price + (atr * config.ATR_TP_MULTIPLIER), 4)
                 else:
-                    sl = round(market_price * (1 + config.STOP_LOSS_PCT), 4)
-                    tp = round(market_price * (1 - config.TAKE_PROFIT_PCT), 4)
+                    sl = round(market_price + (atr * config.ATR_SL_MULTIPLIER), 4)
+                    tp = round(market_price - (atr * config.ATR_TP_MULTIPLIER), 4)
                 
+                # Cálculo de Tamaño de Posición ($100 per trade at 5x)
                 qty = round(config.MARGIN_PER_TRADE * config.LEVERAGE / market_price, 3)
                 
-                # Open Position (Requirement 1 & 4)
+                # Ejecución Autónoma
                 order = self.bybit.open_position(symbol, side, qty, sl, tp)
                 if order:
                     self.telegram.send_signal(symbol, side, market_price, sl, tp, prob)
-                    logger.info(f"Position opened for {symbol}")
+                    logger.info(f"Operación ABIERTA en {symbol} ({side})")
             
-            # Pausa de seguridad para no saturar la API (Rate Limits)
             time.sleep(0.5)
+            
+            # Update GLOBAL_STATE for Web UI
+            self.update_web_state(symbol, trend)
+
+    def update_web_state(self, symbol, trend):
+        try:
+            GLOBAL_STATE["balance"] = self.bybit.get_balance() or 50000.0
+            GLOBAL_STATE["trend"] = trend
+            total_pnl = sum([t.get('pnl_usd', 0) for t in self.stats.history])
+            GLOBAL_STATE["session_pnl"] = total_pnl
+            
+            positions = self.bybit.session.get_positions(category="linear", settleCoin="USDT")['result']['list']
+            GLOBAL_STATE["open_trades"] = [
+                {
+                    "symbol": p["symbol"],
+                    "side": p["side"],
+                    "entry_price": p["avgPrice"],
+                    "pnl": float(p["unrealisedPnl"])
+                } for p in positions if float(p["size"]) > 0
+            ]
+        except:
+            pass
 
     def check_reports(self):
         now = datetime.utcnow()
@@ -171,8 +236,8 @@ class BotTrading:
             stats = self.stats.get_stats("day")
             chart = self.stats.generate_performance_chart()
             self.telegram.send_report("Diario", stats)
-            if chart:
-                self.telegram.send_photo(chart, "Curva de Rendimiento Diaria")
+            # if chart:
+            #     self.telegram.send_photo(chart, "Curva de Rendimiento Diaria")
             
             # Weekly check
             if now.weekday() == 0: # Monday

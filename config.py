@@ -11,25 +11,31 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 # Trading Parameters
-SYMBOL_LIST = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "ADAUSDT", "XRPUSDT", "DOTUSDT", "LINKUSDT", "MATICUSDT", "AVAXUSDT"]
-MARGIN_PER_TRADE = 100.0  # USD (Stakes increased for v3.2)
+SYMBOL_LIST = []  # Se llenará dinámicamente en main.py (escaneo total)
+MARGIN_PER_TRADE = 100.0  # $100 USDT por operación
 LEVERAGE = 5
 MAX_OPEN_TRADES = 10
+BYBIT_TESTNET = True # MODO DEMO SIEMPRE ACTIVO
 
-# Strategy Parameters
-TIMEFRAME_TREND_MAIN = "3h"
-TIMEFRAME_TREND_SUB = "1h"
-TIMEFRAME_ENTRY = "5m" # Default entry
-EMA_FAST = 8
-EMA_MID = 21
-EMA_SLOW = 50
+# Strategy Parameters (Antigravity Alfa v5.0)
+TIMEFRAME_TREND_MAIN = "4h"   # Tendencia macro
+TIMEFRAME_TREND_SUB = "1h"    # Tendencia intermedia
+TIMEFRAME_ENTRY = "15m"       # Gatillo de entrada mejorado (menos ruido que 5m)
 
-# Risk Management
-STOP_LOSS_PCT = 0.01  # 1%
-TAKE_PROFIT_PCT = 0.015  # 1.5%
-MAX_DAILY_DRAWDOWN = 0.05  # 5% target to stop bot
+# Indicadores Técnicos
+EMA_LONG_TERM = 200           # Filtro de tendencia institucional
+RSI_PERIOD = 14
+RSI_OVERBOUGHT = 70
+RSI_OVERSOLD = 30
+MACD_FAST = 12
+MACD_SLOW = 26
+MACD_SIGNAL = 9
+
+# Risk Management Dinámico (ATR)
+ATR_PERIOD = 14
+ATR_SL_MULTIPLIER = 1.5       # Stop Loss dinámico basado en volatilidad
+ATR_TP_MULTIPLIER = 2.5       # Take Profit dinámico (Ratio Riesgo:Beneficio > 1:1.5)
 
 # Filter Thresholds
-MIN_24H_VOLUME = 10000000  # 10M USDT
-MIN_ATR_PCT = 0.003        # 0.3% volatility
-IA_PROBABILITY_THRESHOLD = 0.80  # Professional Threshold increased to 80%
+IA_PROBABILITY_THRESHOLD = 0.85  # Umbral de alta confianza Alfa
+MIN_24H_VOLUME = 5000000        # 5M USDT volumen mínimo para liquidez

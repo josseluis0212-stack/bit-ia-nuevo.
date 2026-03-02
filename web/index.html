@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity Alfa | Control Center</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-robot"></i>
+            <span>ANTIGRAVITY ALFA</span>
+        </div>
+        <nav>
+            <a href="#" class="active"><i class="fas fa-chart-line"></i> Panel Principal</a>
+            <a href="#"><i class="fas fa-cog"></i> Configuración</a>
+            <a href="#"><i class="fas fa-history"></i> Historial</a>
+        </nav>
+        <div class="status-indicator">
+            <div class="dot active"></div>
+            <span>CONECTADO</span>
+            <small>Render Cloud: ACTIVO</small>
+        </div>
+    </div>
+
+    <main class="content">
+        <header>
+            <h1>Panel de Control</h1>
+            <p>Monitoreo en Tiempo Real - v5.0 Professional</p>
+        </header>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="icon-box blue"><i class="fas fa-wallet"></i></div>
+                <div class="stat-info">
+                    <span class="label">Balance Total</span>
+                    <h3 id="balance">Cargando...</h3>
+                    <small>Cuenta Demo Bybit</small>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-box green"><i class="fas fa-trending-up"></i></div>
+                <div class="stat-info">
+                    <span class="label">PnL Sesión</span>
+                    <h3 id="session-pnl">0.00 USDT</h3>
+                    <small>Ganancia/Pérdida Neta</small>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-box orange"><i class="fas fa-eye"></i></div>
+                <div class="stat-info">
+                    <span class="label">Tendencia BTC</span>
+                    <h3 id="btc-trend">ANALIZANDO</h3>
+                    <small>Sentimiento de Mercado</small>
+                </div>
+            </div>
+        </section>
+
+        <section class="main-grid">
+            <div class="card radar">
+                <div class="card-header">
+                    <h2><i class="fas fa-satellite-dish"></i> Radar de Mercado</h2>
+                    <span class="live-tag">Escaneando...</span>
+                </div>
+                <div class="log-container" id="market-logs">
+                    <div class="log-entry">Iniciando motor de escaneo Alfa v5.0...</div>
+                </div>
+            </div>
+            
+            <div class="card trades">
+                <div class="card-header">
+                    <h2><i class="fas fa-exchange-alt"></i> Operaciones Abiertas</h2>
+                    <span class="badge" id="open-trades-count">0</span>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>PAR</th>
+                                <th>TIPO</th>
+                                <th>ENTRADA</th>
+                                <th>PNL (USDT)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trades-list">
+                            <!-- Datos dinámicos -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function updateDashboard() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                document.getElementById('balance').innerText = `${data.balance.toFixed(2)} USDT`;
+                document.getElementById('session-pnl').innerText = `${data.session_pnl.toFixed(2)} USDT`;
+                document.getElementById('session-pnl').className = data.session_pnl >= 0 ? 'positive' : 'negative';
+                document.getElementById('btc-trend').innerText = data.trend.toUpperCase();
+                
+                // Logs
+                const logContainer = document.getElementById('market-logs');
+                logContainer.innerHTML = '';
+                data.logs.forEach(log => {
+                    const div = document.createElement('div');
+                    div.className = 'log-entry';
+                    div.innerText = log;
+                    logContainer.appendChild(div);
+                });
+
+                // Trades
+                const tradesList = document.getElementById('trades-list');
+                tradesList.innerHTML = '';
+                document.getElementById('open-trades-count').innerText = data.open_trades.length;
+                data.open_trades.forEach(trade => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${trade.symbol}</td>
+                        <td class="${trade.side.toLowerCase()}">${trade.side.toUpperCase()}</td>
+                        <td>${trade.entry_price}</td>
+                        <td class="${trade.pnl >= 0 ? 'positive' : 'negative'}">${trade.pnl.toFixed(2)}</td>
+                    `;
+                    tradesList.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error actualizando dashboard:', error);
+            }
+        }
+
+        setInterval(updateDashboard, 5000);
+        updateDashboard();
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import json
 import os
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from datetime import datetime
 import pandas as pd
 
@@ -67,18 +67,19 @@ class StatsManager:
         }
 
     def generate_performance_chart(self, output_path="reports/performance.png"):
-        if not self.history:
-            return None
-        
-        df = pd.DataFrame(self.history)
-        df['pnl_cum'] = df['pnl_usd'].cumsum()
-        
-        plt.figure(figsize=(10, 6))
-        plt.plot(df['pnl_cum'], marker='o', linestyle='-', color='b')
-        plt.title('Rendimiento bit-ia-nuevo v3.0')
-        plt.xlabel('Número de Operación')
-        plt.ylabel('PnL Acumulado (USDT)')
-        plt.grid(True)
-        plt.savefig(output_path)
-        plt.close()
-        return output_path
+        return None
+        # if not self.history:
+        #     return None
+        # 
+        # df = pd.DataFrame(self.history)
+        # df['pnl_cum'] = df['pnl_usd'].cumsum()
+        # 
+        # plt.figure(figsize=(10, 6))
+        # plt.plot(df['pnl_cum'], marker='o', linestyle='-', color='b')
+        # plt.title('Rendimiento bit-ia-nuevo v3.0')
+        # plt.xlabel('Número de Operación')
+        # plt.ylabel('PnL Acumulado (USDT)')
+        # plt.grid(True)
+        # plt.savefig(output_path)
+        # plt.close()
+        # return output_path
