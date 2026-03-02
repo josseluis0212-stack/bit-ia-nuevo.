@@ -83,17 +83,20 @@ class BotTrading:
         # Start Web Server for UI
         threading.Thread(target=run_web_server, daemon=True).start()
 
+        initial_balance = self.bybit.get_balance() or 0.0
+        stats_now = self.stats.get_stats("day")
+
         self.telegram.send_message(
-            f"🚀 *Antigravity Alfa v5.0 Activa*\n"
+            f"🚀 *BIT-IA PRO v5.2: SISTEMA ACTIVADO*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"💰 *Capital Inicia:* ${initial_balance:,.2f} USDT\n"
+            f"📊 *Ops Hoy:* {stats_now['count']}   🎯 *Win Rate:* {stats_now['win_rate']}%\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"🌐 *Escaneo:* TODOS los pares USDT Perpetuos\n"
-            f"📊 *Estrategia:* Confluencia MACD + RSI + BB\n"
-            f"🛡️ *Riesgo:* SL/TP Dinámico (ATR)\n"
-            f"🧠 *IA Umbral:* {int(config.IA_PROBABILITY_THRESHOLD*100)}% (Alfa)\n"
-            f"💰 *Margen:* ${config.MARGIN_PER_TRADE} USDT | ⚙️ *Apalancamiento:* {config.LEVERAGE}x\n"
-            f"💼 *Máx Ops:* {config.MAX_OPEN_TRADES}\n"
+            f"🧠 *IA Confianza:* {int(config.IA_PROBABILITY_THRESHOLD*100)}% (Alfa)\n"
+            f"🛡️ *Filtros:* Volumen (+5M) | ATR Dinámico\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🤖 _Sistema autónomo v5.0 operando 24/7 en MODO DEMO._"
+            f"🤖 _Bot operativo 24/7 en la Nube (Render)._"
         )
 
         while True:
@@ -125,8 +128,11 @@ class BotTrading:
                 # Save to stats
                 self.stats.save_trade(symbol, side, entry_price, exit_price, 0.0, pnl, order_id)
                 
-                # Send Signal
-                self.telegram.send_closure_signal(symbol, side, pnl, result)
+                # Get updated stats for report
+                current_stats = self.stats.get_stats("day")
+
+                # Send Signal with stats
+                self.telegram.send_closure_signal(symbol, side, pnl, result, stats=current_stats)
                 
                 # Autonomous Learning (Requirement 6/7)
                 if result == "PERDIDA":
@@ -203,7 +209,8 @@ class BotTrading:
                 # Ejecución Autónoma
                 order = self.bybit.open_position(symbol, side, qty, sl, tp)
                 if order:
-                    self.telegram.send_signal(symbol, side, market_price, sl, tp, prob)
+                    current_bal = self.bybit.get_balance()
+                    self.telegram.send_signal(symbol, side, market_price, sl, tp, prob, balance=current_bal)
                     logger.info(f"Operación ABIERTA en {symbol} ({side})")
             
             time.sleep(0.5)

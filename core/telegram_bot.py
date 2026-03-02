@@ -19,40 +19,51 @@ class TelegramBot:
             self.logger.error(f"Error sending Telegram message: {e}")
             return None
 
-    def send_signal(self, symbol, side, entry_price, sl, tp, prob):
+    def send_signal(self, symbol, side, entry_price, sl, tp, prob, balance=None):
         side_label = "COMPRA (Long) 🟢" if side == "Buy" else "VENTA (Short) 🔴"
+        balance_info = f"💰 *Balance:* ${balance:,.2f} USDT\n" if balance else ""
         text = (
-            f"⚡️ *BIT-IA PRO: SEÑAL DETECTADA*\n"
+            f"⚡️ *BIT-IA PRO: SEÑAL ALFA v5.2*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"💎 *Activo:* {symbol}\n"
             f"↕️ *Posición:* {side_label}\n"
+            f"{balance_info}"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"💰 *Monto:* ${config.MARGIN_PER_TRADE} USDT\n"
+            f"💵 *Margen:* ${config.MARGIN_PER_TRADE} USDT\n"
             f"⚙️ *Apalancamiento:* {config.LEVERAGE}x (Aislado)\n"
-            f"💵 *Precio Entrada:* {entry_price}\n"
+            f"📈 *Precio Entrada:* {entry_price}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🎯 *Take Profit:* {tp} (+2%)\n"
-            f"🛑 *Stop Loss:* {sl} (-1.5%)\n"
+            f"🎯 *Take Profit:* {tp}\n"
+            f"🛑 *Stop Loss:* {sl}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"🧠 *Confianza IA:* {int(prob*100)}%\n"
-            f"⚠️ *Gestión:* Riesgo controlado activado.\n"
+            f"⚠️ _Operación gestionada automáticamente._\n"
             f"━━━━━━━━━━━━━━━━━━━━━━"
         )
         return self.send_message(text)
 
-    def send_closure_signal(self, symbol, side, pnl_usd, result):
-        emoji = "✨" if result == "GANANCIA" else "⚖️"
-        res_color = "❇️ FINALIZADA CON ÉXITO" if result == "GANANCIA" else "⚠️ CIERRE POR RIESGO"
+    def send_closure_signal(self, symbol, side, pnl_usd, result, stats=None):
+        emoji = "❇️" if result == "GANANCIA" else "⚠️"
+        res_label = "GANANCIA ✅" if result == "GANANCIA" else "PÉRDIDA ❌"
+        
+        stats_info = ""
+        if stats:
+            stats_info = (
+                f"📋 *Sesión Hoy:* {stats['count']} ops\n"
+                f"🎯 *Win Rate:* {stats['win_rate']}%\n"
+                f"💵 *PnL Total:* {stats['pnl']:+.2f} USDT\n"
+            )
+
         text = (
-            f"{emoji} *BIT-IA PRO: OPERACIÓN CERRADA*\n"
+            f"{emoji} *BIT-IA PRO: CIERRE DETECTADO*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"🪙 *Moneda:* {symbol}\n"
-            f"📈 *Estado:* {res_color}\n"
-            f"📊 *Dirección:* {side}\n"
+            f"📈 *Resultado:* {res_label}\n"
+            f"📊 *PnL:* {pnl_usd:+.2f} USDT\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"💰 *PnL Neto:* {pnl_usd:+.2f} USDT\n"
-            f"📅 *Win Rate objetivo:* {config.IA_PROBABILITY_THRESHOLD*100:.0f}%\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━"
+            f"{stats_info}"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🤖 _Filtros re-ajustados según resultado._"
         )
         return self.send_message(text)
 

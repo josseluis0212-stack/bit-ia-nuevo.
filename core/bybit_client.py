@@ -125,3 +125,12 @@ class BybitClient:
         except Exception as e:
             self.logger.error(f"Error fetching closed PnL: {e}")
             return []
+
+    def get_balance(self):
+        try:
+            res = self.session.get_wallet_balance(accountType="UNIFIED", coin="USDT")
+            balance = float(res['result']['list'][0]['coin'][0]['walletBalance'])
+            return balance
+        except Exception as e:
+            self.logger.error(f"Error fetching balance: {e}")
+            return None
