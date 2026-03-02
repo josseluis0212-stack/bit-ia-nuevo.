@@ -1,92 +1,111 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Antigravity Alfa | Control Center</title>
+    <title>Antigravity Alfa v5.0 | Premium Control</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
+
 <body>
     <div class="sidebar">
         <div class="logo">
-            <i class="fas fa-robot"></i>
-            <span>ANTIGRAVITY ALFA</span>
+            <i class="fas fa-bolt"></i>
+            <span>ANTIGRAVITY</span>
         </div>
         <nav>
-            <a href="#" class="active"><i class="fas fa-chart-line"></i> Panel Principal</a>
-            <a href="#"><i class="fas fa-cog"></i> Configuración</a>
-            <a href="#"><i class="fas fa-history"></i> Historial</a>
+            <a href="#" class="active"><i class="fas fa-grid-2"></i> <span>Dashboard</span></a>
+            <a href="#"><i class="fas fa-microchip"></i> <span>Algoritmo Alfa</span></a>
+            <a href="#"><i class="fas fa-shield-alt"></i> <span>Riesgo ATR</span></a>
+            <a href="#"><i class="fas fa-sliders-h"></i> <span>Parámetros</span></a>
         </nav>
         <div class="status-indicator">
-            <div class="dot active"></div>
-            <span>CONECTADO</span>
-            <small>Render Cloud: ACTIVO</small>
+            <div class="status-badge">
+                <div class="dot"></div>
+                <span>LIVE ALFA 5.0</span>
+            </div>
+            <small style="opacity: 0.5; font-size: 0.65rem;">RENDER CLOUD ACTIVATED</small>
         </div>
     </div>
 
     <main class="content">
         <header>
-            <h1>Panel de Control</h1>
-            <p>Monitoreo en Tiempo Real - v5.0 Professional</p>
+            <div>
+                <h1>Control Center <span class="version-tag">v5.0 ALFA</span></h1>
+                <p>Monitoreo Institucional de Futuros Perpetuos</p>
+            </div>
+            <div class="header-actions">
+                <span id="server-time" style="font-family: monospace; opacity: 0.6;">--:--:--</span>
+            </div>
         </header>
 
         <section class="stats-grid">
             <div class="stat-card">
-                <div class="icon-box blue"><i class="fas fa-wallet"></i></div>
+                <div class="stat-header">
+                    <div class="icon-circle" style="background: rgba(56, 189, 248, 0.1); color: var(--accent-blue);">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
                 <div class="stat-info">
-                    <span class="label">Balance Total</span>
-                    <h3 id="balance">Cargando...</h3>
-                    <small>Cuenta Demo Bybit</small>
+                    <span class="label">EQUITY BALANCE</span>
+                    <h3 id="balance">0.00 USDT</h3>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="icon-box green"><i class="fas fa-trending-up"></i></div>
+                <div class="stat-header">
+                    <div class="icon-circle" style="background: rgba(34, 197, 94, 0.1); color: var(--accent-green);">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
                 <div class="stat-info">
-                    <span class="label">PnL Sesión</span>
+                    <span class="label">SESSION PNL</span>
                     <h3 id="session-pnl">0.00 USDT</h3>
-                    <small>Ganancia/Pérdida Neta</small>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="icon-box orange"><i class="fas fa-eye"></i></div>
+                <div class="stat-header">
+                    <div class="icon-circle" style="background: rgba(129, 140, 248, 0.1); color: var(--accent-purple);">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                </div>
                 <div class="stat-info">
-                    <span class="label">Tendencia BTC</span>
-                    <h3 id="btc-trend">ANALIZANDO</h3>
-                    <small>Sentimiento de Mercado</small>
+                    <span class="label">AI CONFLUENCE</span>
+                    <h3 id="btc-trend">NEUTRAL</h3>
                 </div>
             </div>
         </section>
 
         <section class="main-grid">
-            <div class="card radar">
+            <div class="card">
                 <div class="card-header">
-                    <h2><i class="fas fa-satellite-dish"></i> Radar de Mercado</h2>
-                    <span class="live-tag">Escaneando...</span>
+                    <h2><i class="fas fa-radar"></i> Radar de Mercado</h2>
+                    <div class="live-tag">REAL-TIME SCANNER</div>
                 </div>
-                <div class="log-container" id="market-logs">
-                    <div class="log-entry">Iniciando motor de escaneo Alfa v5.0...</div>
+                <div class="log-viewer" id="market-logs">
+                    <!-- Logs stream -->
                 </div>
             </div>
-            
-            <div class="card trades">
+
+            <div class="card">
                 <div class="card-header">
-                    <h2><i class="fas fa-exchange-alt"></i> Operaciones Abiertas</h2>
-                    <span class="badge" id="open-trades-count">0</span>
+                    <h2><i class="fas fa-briefcase"></i> Operaciones</h2>
+                    <span class="badge" id="open-trades-count" style="background: var(--accent-purple);">0</span>
                 </div>
-                <div class="table-container">
-                    <table>
+                <div style="overflow-x: auto;">
+                    <table class="trades-table">
                         <thead>
                             <tr>
-                                <th>PAR</th>
-                                <th>TIPO</th>
-                                <th>ENTRADA</th>
-                                <th>PNL (USDT)</th>
+                                <th>SYMBOL</th>
+                                <th>SIDE</th>
+                                <th>ENTRY</th>
+                                <th>UNREALIZED PNL</th>
                             </tr>
                         </thead>
                         <tbody id="trades-list">
-                            <!-- Datos dinámicos -->
+                            <!-- Trade entries -->
                         </tbody>
                     </table>
                 </div>
@@ -95,23 +114,34 @@
     </main>
 
     <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('server-time').innerText = now.toLocaleTimeString('es-ES');
+        }
+        setInterval(updateTime, 1000);
+
         async function updateDashboard() {
             try {
                 const response = await fetch('/api/stats');
                 const data = await response.json();
-                
-                document.getElementById('balance').innerText = `${data.balance.toFixed(2)} USDT`;
-                document.getElementById('session-pnl').innerText = `${data.session_pnl.toFixed(2)} USDT`;
-                document.getElementById('session-pnl').className = data.session_pnl >= 0 ? 'positive' : 'negative';
-                document.getElementById('btc-trend').innerText = data.trend.toUpperCase();
-                
+
+                document.getElementById('balance').innerText = `${data.balance.toLocaleString()} USDT`;
+
+                const pnlEl = document.getElementById('session-pnl');
+                pnlEl.innerText = `${data.session_pnl >= 0 ? '+' : ''}${data.session_pnl.toFixed(2)} USDT`;
+                pnlEl.className = data.session_pnl >= 0 ? 'pos-val' : 'neg-val';
+
+                const trendEl = document.getElementById('btc-trend');
+                trendEl.innerText = data.trend.toUpperCase();
+                trendEl.style.color = data.trend === 'long' ? 'var(--accent-green)' : (data.trend === 'short' ? 'var(--accent-red)' : 'var(--accent-blue)');
+
                 // Logs
                 const logContainer = document.getElementById('market-logs');
                 logContainer.innerHTML = '';
                 data.logs.forEach(log => {
                     const div = document.createElement('div');
-                    div.className = 'log-entry';
-                    div.innerText = log;
+                    div.className = 'log-line';
+                    div.innerHTML = `<span class="log-msg">${log}</span>`;
                     logContainer.appendChild(div);
                 });
 
@@ -122,20 +152,21 @@
                 data.open_trades.forEach(trade => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${trade.symbol}</td>
-                        <td class="${trade.side.toLowerCase()}">${trade.side.toUpperCase()}</td>
-                        <td>${trade.entry_price}</td>
-                        <td class="${trade.pnl >= 0 ? 'positive' : 'negative'}">${trade.pnl.toFixed(2)}</td>
+                        <td style="font-weight:700">${trade.symbol}</td>
+                        <td><span class="side-badge ${trade.side === 'Buy' ? 'side-buy' : 'side-sell'}">${trade.side.toUpperCase()}</span></td>
+                        <td style="font-family: monospace;">${trade.entry_price}</td>
+                        <td class="${trade.pnl >= 0 ? 'pos-val' : 'neg-val'}">${trade.pnl.toFixed(4)}</td>
                     `;
                     tradesList.appendChild(tr);
                 });
             } catch (error) {
-                console.error('Error actualizando dashboard:', error);
+                console.error('Fetch error:', error);
             }
         }
 
-        setInterval(updateDashboard, 5000);
+        setInterval(updateDashboard, 4000);
         updateDashboard();
     </script>
 </body>
+
 </html>
